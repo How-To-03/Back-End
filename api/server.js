@@ -1,10 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 
+// const authenticate = require("./auth/authenticate-middleware.js");
+const authRouter = require("./auth/auth-router.js");
+
 const server = express();
 
 server.use(cors());
 server.use(express.json());
+
+server.use("/api/auth", authRouter);
 
 // Base root welcome message
 server.get("/", (req, res) => {
@@ -19,6 +24,7 @@ server.use((err, req, res, next) => {
     console.log(err);
     res.status(500).json({
         message: "Somthing went wrong",
+        success: false
     });
 });
 
