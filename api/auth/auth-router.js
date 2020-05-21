@@ -39,14 +39,14 @@ router.post("/login", validateBody(), async (req, res, next) => {
 
         // Send username and JWT
         res.send({
-            message: `Logged in: ${dbUser.username}`,
+            message: `logged in: ${dbUser.username}`,
             success: true,
             token,
         });
     } else {
         // Passwords did not match :(
         res.status(401).json({
-            message: "You shall not pass!",
+            message: "you shall not pass!",
             success: false,
         });
     }
@@ -65,7 +65,7 @@ function validateBody() {
 
         // No data sent
         res.status(400).json({
-            message: "Missing post data",
+            message: "missing post data",
             missingData: true,
             success: false,
         });
