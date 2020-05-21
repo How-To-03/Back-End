@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../db");
 
-router.post("/register", async (req, res, next) => {
+router.post("/register", validateBody(), async (req, res, next) => {
     // Get user info
     const user = req.body;
 
@@ -21,7 +21,7 @@ router.post("/register", async (req, res, next) => {
     }
 });
 
-router.post("/login", async (req, res, next) => {
+router.post("/login", validateBody(), async (req, res, next) => {
     // Get user info
     const user = req.body;
 
@@ -51,5 +51,25 @@ router.post("/login", async (req, res, next) => {
         });
     }
 });
+
+// Validate required post data
+function validateBody() {
+    return (req, res, next) => {
+        // Check request body exists
+        if (req.body) {
+            // Check required post data exists
+            if (req.body.username && req.body.password) {
+                return next();
+            }
+        }
+
+        // No data sent
+        res.status(400).json({
+            message: "Missing post data",
+            missingData: true,
+            success: false,
+        });
+    };
+}
 
 module.exports = router;
