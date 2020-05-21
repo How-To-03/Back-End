@@ -1,0 +1,41 @@
+{
+    "name": "how-to--server",
+    "version": "1.0.0",
+    "description": "Back end server built using Node js, express, knex",
+    "homepage": "https://github.com/How-To-03/Back-End",
+    "main": "index.js",
+    "author": {
+        "name": "Harry Merritt",
+        "url": "https://github.com/hmerritt"
+    },
+    "scripts": {
+        "start": "node index.js",
+        "start:watch": "nodemon index.js",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage"
+    },
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "express": "^4.17.1",
+        "jsonwebtoken": "^8.5.1",
+        "knex": "^0.21.1",
+        "knex-cleaner": "^1.3.0",
+        "lodash": "^4.17.15"
+    },
+    "devDependencies": {
+        "gulp": "^4.0.2",
+        "gulp-prettier": "^3.0.0",
+        "jest": "^26.0.1",
+        "prettier": "^2.0.5",
+        "supertest": "^4.0.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/How-To-03/Back-End.git"
+    },
+    "bugs": {
+        "url": "https://github.com/How-To-03/Back-End/issues"
+    },
+    "license": "ISC"
+}
