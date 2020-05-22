@@ -17,7 +17,7 @@ server.use("/api/posts", authenticate, postsRouter);
 server.get("/", (req, res) => {
     res.send({
         message: "Hello World!",
-        routes: ["/api/auth/register", "/api/auth/login"],
+        routes: ["/api/auth/register", "/api/auth/login", "/api/posts"],
     });
 });
 
