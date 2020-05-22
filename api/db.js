@@ -1,11 +1,15 @@
 const db = require("../database/db-config");
 
-function get(col, value) {
-    return db("users").where(col, value);
+function getAll(table) {
+    return db(table);
 }
 
-function insert(user) {
-    return db("users").insert(user);
+function get(table, col, value) {
+    return db(table).where(col, value);
 }
 
-module.exports = { get, insert };
+function insert(table, obj) {
+    return db(table).insert(obj);
+}
+
+module.exports = { getAll, get, insert };
