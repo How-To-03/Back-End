@@ -11,6 +11,7 @@ exports.up = function (knex) {
 
         table.text("content").notNullable();
         table.text("image");
+        table.integer("likes").defaultTo(0);
     });
 };
 
