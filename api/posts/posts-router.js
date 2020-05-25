@@ -19,6 +19,38 @@ router.get("/", async (req, res, next) => {
     }
 });
 
+router.post("/", validateBody(), async (req, res, next) => {
+    try {
+        // Get username from token
+        // Get user-id from username
+        const username = req.token.username;
+        const userId = await db("users").where("username", username)
+                            .select("id")
+                            .first();
+
+        const post = {
+            content: req.body.content,
+            image: req.body.image || null,
+            likes: 0
+        }
+
+        // Add post to db
+        const [postId] = await db(table).insert({
+            user_id: userId.id,
+            ...post
+        });
+
+        // Return all posts
+        res.send({
+            id: postId,
+            username: username,
+            ...post
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
 // Validate required post data
 function validateBody() {
     return (req, res, next) => {
