@@ -1,14 +1,18 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const db = require("../db");
+const dbhelper = require("../db");
+const db = require("../../database/db-config");
+const table = "posts";
 
 router.get("/", async (req, res, next) => {
     try {
         // Get all posts from db
-        const posts = await db.getAll("posts");
+        const posts = await db(table).join("users", "users.id", "posts.user_id")
+                            .orderBy("posts.likes", "desc")
+                            .select("posts.id", "users.username", "posts.content", "posts.image", "posts.likes");
 
-        // Return username of user
+        // Return all posts
         res.send(posts);
     } catch (err) {
         next(err);
@@ -21,7 +25,7 @@ function validateBody() {
         // Check request body exists
         if (req.body) {
             // Check required post data exists
-            if (req.body.post_title && req.body.post_body) {
+            if (req.body.content) {
                 return next();
             }
         }
