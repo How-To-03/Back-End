@@ -52,6 +52,8 @@ _No headers needed for login + register (only after user logs-in)_
 ```
 
 
+<br />
+
 __/----------------------------------------/ POST ROUTES /----------------------------------------/__
 All routes from here are __protected__ and require an `Authorization` header to access.
 
@@ -70,7 +72,15 @@ All routes from here are __protected__ and require an `Authorization` header to 
 #### GET: `/api/posts`
 ##### Example response
 ```json
+// Returns all posts (sorted by likes)
 [
+  {
+    "id": 2,
+    "username": "John Doe",
+    "content": "_ANOTHER AMAZING LIFE HACK_",
+    "image": "example.com/image.png",
+    "likes": 21
+  },
   {
     "id": 1,
     "username": "John Doe",
