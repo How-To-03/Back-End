@@ -51,6 +51,52 @@ router.post("/", validateBody(), async (req, res, next) => {
     }
 });
 
+
+router.put("/:id", validateBody(), async (req, res, next) => {
+    try {
+        // Get post before updating
+        const originalPost = await db(table).where("id", req.params.id).first();
+
+        //  Check if post exists
+        if (!originalPost) {
+            // Post does not exist
+            res.status(400).json({
+                message: "requested post does not exist /posts/:id",
+                missingData: true,
+                success: false,
+            });
+        }
+
+        // Get username from token
+        // Get user-id from username
+        const username = req.token.username;
+        const userId = await db("users").where("username", username)
+                            .select("id")
+                            .first();
+
+        const post = {
+            content: req.body.content
+        }
+
+        // Add post to db
+        const postId = await db(table).where("id", req.params.id).first().update({
+            user_id: userId.id,
+            ...post
+        });
+
+        console.log(postId);
+
+        // Return all posts
+        res.send({
+            id: postId,
+            username: username,
+            ...post
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
 router.delete("/:id", async (req, res, next) => {
     try {
         // Get post before deleting
