@@ -51,6 +51,31 @@ router.post("/", validateBody(), async (req, res, next) => {
     }
 });
 
+router.delete("/:id", async (req, res, next) => {
+    try {
+        // Get post before deleting
+        const post = await db(table).where("id", req.params.id).first();
+
+        //  Check if post exists
+        if (!post) {
+            // Post does not exist
+            res.status(400).json({
+                message: "requested post does not exist /posts/:id",
+                missingData: true,
+                success: false,
+            });
+        }
+
+        // Remove post from db
+        await db(table).where("id", req.params.id).first().del();
+
+        // Return all posts
+        res.send(post);
+    } catch (err) {
+        next(err);
+    }
+});
+
 // Validate required post data
 function validateBody() {
     return (req, res, next) => {
