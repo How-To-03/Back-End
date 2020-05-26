@@ -68,30 +68,22 @@ router.put("/:id", validateBody(), async (req, res, next) => {
         }
 
         // Get username from token
-        // Get user-id from username
         const username = req.token.username;
-        const userId = await db("users").where("username", username)
-                            .select("id")
-                            .first();
-
-        const post = {
-            content: req.body.content
-        }
 
         // Add post to db
-        const postId = await db(table).where("id", req.params.id).first().update({
-            user_id: userId.id,
-            ...post
+        await db(table).where("id", req.params.id).first().update({
+            content: req.body.content
         });
 
-        console.log(postId);
+        // Get full post from db
+        const post = await db(table)
+                            .where("posts.id", req.params.id).first()
+                            .join("users", "users.id", "posts.user_id")
+                            .orderBy("posts.likes", "desc")
+                            .select("posts.id", "users.username", "posts.content", "posts.image", "posts.likes");
 
         // Return all posts
-        res.send({
-            id: postId,
-            username: username,
-            ...post
-        });
+        res.send(post);
     } catch (err) {
         next(err);
     }
@@ -100,7 +92,11 @@ router.put("/:id", validateBody(), async (req, res, next) => {
 router.delete("/:id", async (req, res, next) => {
     try {
         // Get post before deleting
-        const post = await db(table).where("id", req.params.id).first();
+        const post = await db(table)
+                            .where("posts.id", req.params.id).first()
+                            .join("users", "users.id", "posts.user_id")
+                            .orderBy("posts.likes", "desc")
+                            .select("posts.id", "users.username", "posts.content", "posts.image", "posts.likes");
 
         //  Check if post exists
         if (!post) {
