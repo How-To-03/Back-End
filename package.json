@@ -9,7 +9,7 @@
         "url": "https://github.com/hmerritt"
     },
     "scripts": {
-        "start": "knex migrate:up && node index.js",
+        "start": "knex migrate:latest && knex seed:run && node index.js",
         "start:watch": "nodemon index.js",
         "test": "jest",
         "test:watch": "jest --watch",

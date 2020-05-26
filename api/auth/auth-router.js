@@ -12,7 +12,7 @@ router.post("/register", validateBody(), async (req, res, next) => {
 
     try {
         // Add user to db
-        const [userId] = await db.insert(user);
+        const [userId] = await db.insert("users", user);
 
         // Return username of user
         res.send({ username: user.username, success: true });
@@ -26,7 +26,7 @@ router.post("/login", validateBody(), async (req, res, next) => {
     const user = req.body;
 
     // Get user from db (by username)
-    const [dbUser] = await db.get("username", user.username);
+    const [dbUser] = await db.get("users", "username", user.username);
 
     // Compare password with one stored in db
     if (dbUser && bcrypt.compareSync(user.password, dbUser.password)) {
@@ -34,7 +34,7 @@ router.post("/login", validateBody(), async (req, res, next) => {
         const token = jwt.sign(
             { username: user.username },
             process.env.JWT_SECRET || "sUpeR sEcret cOde",
-            { expiresIn: "1h" }
+            { expiresIn: "100 days" }
         );
 
         // Send username and JWT
