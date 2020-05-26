@@ -34,7 +34,7 @@ router.post("/login", validateBody(), async (req, res, next) => {
         const token = jwt.sign(
             { username: user.username },
             process.env.JWT_SECRET || "sUpeR sEcret cOde",
-            { expiresIn: "1h" }
+            { expiresIn: "100 days" }
         );
 
         // Send username and JWT
