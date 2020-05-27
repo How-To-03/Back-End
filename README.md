@@ -58,7 +58,7 @@ axios({
 	method: 'get',
 	url: 'https://lambda-howto.herokuapp.com/api/posts',
 	headers: {
-		Authorization: 'Bearer ' + token
+		Authorization: token
 	}
 })
 ```
@@ -116,7 +116,8 @@ All routes from here are __protected__ and require an `Authorization` header to 
 #### Example body
 ```json
 {
-	"content": "My new and amazing life-hack"
+	"content": "My new and amazing life-hack",
+	"image": "https://res.cloudinary.com/dicdxigq4/image/upload/v1590538257/sample.jpg"
 }
 ```
 
@@ -140,7 +141,8 @@ All routes from here are __protected__ and require an `Authorization` header to 
 #### Example body
 ```json
 {
-	"content": "My UPDATED life-hack"
+	"content": "My UPDATED life-hack",
+	"image": "https://res.cloudinary.com/dicdxigq4/image/upload/samples/landscapes/nature-mountains.jpg"
 }
 ```
 
