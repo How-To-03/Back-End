@@ -72,7 +72,8 @@ router.put("/:id", validateBody(), async (req, res, next) => {
 
         // Add post to db
         await db(table).where("id", req.params.id).first().update({
-            content: req.body.content
+            content: req.body.content,
+            image: req.body.image || originalPost.image,
         });
 
         // Get full post from db
