@@ -7,10 +7,36 @@ const table = "posts";
 
 router.get("/", async (req, res, next) => {
     try {
+        // Get username from token
+        // Get user-id from username
+        const username = req.token.username;
+        const userId = await db("users").where("username", username)
+                            .select("id")
+                            .first();
+
         // Get all posts from db
-        const posts = await db(table).join("users", "users.id", "posts.user_id")
+        let posts = await db(table)
+                            .join("users", "users.id", "posts.user_id")
                             .orderBy("posts.likes", "desc")
                             .select("posts.id", "users.username", "posts.content", "posts.image", "posts.likes");
+
+        // Get users likes
+        // (very hacky but works for now; should really be one sql search)
+        const usersLikes = await db("post_likes")
+                                .join("users", "users.id", "post_likes.user_id")
+                                .where("users.id", userId.id)
+                                .select("post_likes.post_id as id");
+
+        // Determine if current user has liked each post
+        posts = posts.map((item, array) => {
+            if (usersLikes.some(likes => likes.id === item.id)) {
+                item.hasLiked = true;
+            }
+            else {
+                item.hasLiked = false;
+            }
+            return item;
+        });
 
         // Return all posts
         res.send(posts);
