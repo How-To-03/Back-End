@@ -45,6 +45,50 @@ router.get("/", async (req, res, next) => {
     }
 });
 
+// Toggle post like for user
+router.get("/:id/like", async (req, res, next) => {
+    try {
+        let postLikeState;
+        // Get username from token
+        // Get user-id from username
+        const username = req.token.username;
+        const userId = await db("users").where("username", username)
+                            .select("id")
+                            .first();
+
+        // Get users likes
+        // (very hacky but works for now; should really be one sql search)
+        const usersLikes = await db("post_likes")
+                                .join("users", "users.id", "post_likes.user_id")
+                                .where("users.id", userId.id)
+                                .select("post_likes.post_id as id");
+
+        // Determine if current user has liked each post
+        if (usersLikes.some(likes => likes.id == req.params.id)) {
+            // Un-like post
+            postLikeState = false;
+            await db("post_likes")
+                .where("post_id", req.params.id)
+                .andWhere("user_id", userId.id)
+                .first()
+                .del();
+        }
+        else {
+            // Like post
+            postLikeState = true;
+            await db("post_likes").insert({
+                user_id: userId.id,
+                post_id: req.params.id
+            });
+        }
+
+        // Return new post-like state
+        res.send({ "hasLiked": postLikeState });
+    } catch (err) {
+        next(err);
+    }
+});
+
 router.post("/", validateBody(), async (req, res, next) => {
     try {
         // Get username from token
@@ -96,7 +140,7 @@ router.put("/:id", validateBody(), async (req, res, next) => {
         // Get username from token
         const username = req.token.username;
 
-        // Add post to db
+        // Update post to db
         await db(table).where("id", req.params.id).first().update({
             content: req.body.content,
             image: req.body.image || originalPost.image,
