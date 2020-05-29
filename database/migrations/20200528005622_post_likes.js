@@ -4,17 +4,13 @@ exports.up = function (knex) {
             .integer("user_id")
             .unsigned()
             .notNullable()
-            .references("users.id")
-            .onDelete("CASCADE")
-            .onUpdate("CASCADE");
+            .references("users.id");
 
         table
             .integer("post_id")
             .unsigned()
             .notNullable()
-            .references("posts.id")
-            .onDelete("CASCADE")
-            .onUpdate("CASCADE");
+            .references("posts.id");
     });
 };
 
