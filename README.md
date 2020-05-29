@@ -174,3 +174,24 @@ All routes from here are __protected__ and require an `Authorization` header to 
   "likes": 0
 }
 ```
+
+
+### GET `/api/posts/:id/like`
+
+- Toggle like-status for a post
+
+Will like a post for the current user if not already; and un-like if already liked.
+
+#### Example response
+```json
+// Returns new like status
+{
+  "hasLiked": false
+}
+```
+
+```json
+{
+  "hasLiked": true
+}
+```
