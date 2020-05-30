@@ -51,10 +51,23 @@ _No headers needed for login + register (only after user logs-in)_
 }
 ```
 
+You __need__ to save the token to 'localStorage' and use it as an 'Authorization' header on each request.
+```javascript
+// Request will look something like this
+axios({
+	method: 'get',
+	url: 'https://lambda-howto.herokuapp.com/api/posts',
+	headers: {
+		Authorization: token
+	}
+})
+```
+
 
 <br />
 
 __/----------------------------------------/ POST ROUTES /----------------------------------------/__
+
 All routes from here are __protected__ and require an `Authorization` header to access.
 
 | endpoint         	| type   	| description             	|
@@ -69,8 +82,12 @@ All routes from here are __protected__ and require an `Authorization` header to 
 |-----------------	|----------	|--------------------------	|
 | `Authorization` 	| yes      	| Auth `token` from log-in 	|
 
-#### GET: `/api/posts`
-##### Example response
+
+### GET `/api/posts`
+
+- Returns all posts
+
+#### Example response
 ```json
 // Returns all posts (sorted by likes)
 [
@@ -89,4 +106,92 @@ All routes from here are __protected__ and require an `Authorization` header to 
     "likes": 8
   }
 ]
+```
+
+
+### POST: `/api/posts`
+
+- Create a new post
+
+#### Example body
+```json
+{
+	"content": "My new and amazing life-hack",
+	"image": "https://res.cloudinary.com/dicdxigq4/image/upload/v1590538257/sample.jpg"
+}
+```
+
+#### Example response
+```json
+// Returns new post
+{
+  "id": 3,
+  "username": "John Doe",
+  "content": "My new and amazing life-hack",
+  "image": "https://example.com/jpg.com",
+  "likes": 0
+}
+```
+
+
+### PUT: `/api/posts/:id`
+
+- Update an existing post
+
+#### Example body
+```json
+{
+	"content": "My UPDATED life-hack",
+	"image": "https://res.cloudinary.com/dicdxigq4/image/upload/samples/landscapes/nature-mountains.jpg"
+}
+```
+
+#### Example response
+```json
+// Returns updated post
+{
+  "id": 3,
+  "username": "John Doe",
+  "content": "My UPDATED life-hack",
+  "image": "https://example.com/jpg.com",
+  "likes": 0
+}
+```
+
+
+### DELETE: `/api/posts/:id`
+
+- Remove an existing post
+
+#### Example response
+```json
+// Returns removed post
+{
+  "id": 3,
+  "username": "John Doe",
+  "content": "My UPDATED life-hack",
+  "image": "https://example.com/jpg.com",
+  "likes": 0
+}
+```
+
+
+### GET `/api/posts/:id/like`
+
+- Toggle like-status for a post
+
+Will like a post for the current user if not already; and un-like if already liked.
+
+#### Example response
+```json
+// Returns new like status
+{
+  "hasLiked": false
+}
+```
+
+```json
+{
+  "hasLiked": true
+}
 ```
