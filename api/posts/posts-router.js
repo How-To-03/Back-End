@@ -6,15 +6,8 @@ const dbhelper = require("../db");
 const db = require("../../database/db-config");
 const table = "posts";
 
-router.get("/", async (req, res, next) => {
+router.get("/", getUser(), async (req, res, next) => {
     try {
-        // Get username from token
-        // Get user-id from username
-        const username = req.token.username;
-        const userId = await db("users").where("username", username)
-                            .select("id")
-                            .first();
-
         // Get all posts from db
         let posts = await db(table)
                             .join("users", "users.id", "posts.user_id")
@@ -24,7 +17,7 @@ router.get("/", async (req, res, next) => {
         // (very hacky but works for now; should really be one sql search)
         const usersLikes = await db("post_likes")
                                 .join("users", "users.id", "post_likes.user_id")
-                                .where("users.id", userId.id)
+                                .where("users.id", req.user.id)
                                 .select("post_likes.post_id as id");
 
         // Determine if current user has liked each post
@@ -57,21 +50,15 @@ router.get("/", async (req, res, next) => {
 });
 
 // Toggle post like for user
-router.get("/:id/like", async (req, res, next) => {
+router.get("/:id/like", getUser(), async (req, res, next) => {
     try {
         let postLikeState;
-        // Get username from token
-        // Get user-id from username
-        const username = req.token.username;
-        const userId = await db("users").where("username", username)
-                            .select("id")
-                            .first();
 
         // Get users likes
         // (very hacky but works for now; should really be one sql search)
         const usersLikes = await db("post_likes")
                                 .join("users", "users.id", "post_likes.user_id")
-                                .where("users.id", userId.id)
+                                .where("users.id", req.user.id)
                                 .select("post_likes.post_id as id");
 
         // Determine if current user has liked each post
@@ -80,7 +67,7 @@ router.get("/:id/like", async (req, res, next) => {
             postLikeState = false;
             await db("post_likes")
                 .where("post_id", req.params.id)
-                .andWhere("user_id", userId.id)
+                .andWhere("user_id", req.user.id)
                 .first()
                 .del();
         }
@@ -88,7 +75,7 @@ router.get("/:id/like", async (req, res, next) => {
             // Like post
             postLikeState = true;
             await db("post_likes").insert({
-                user_id: userId.id,
+                user_id: req.user.id,
                 post_id: req.params.id
             });
         }
@@ -100,31 +87,23 @@ router.get("/:id/like", async (req, res, next) => {
     }
 });
 
-router.post("/", validateBody(), async (req, res, next) => {
+router.post("/", validateBody(), getUser(), async (req, res, next) => {
     try {
-        // Get username from token
-        // Get user-id from username
-        const username = req.token.username;
-        const userId = await db("users").where("username", username)
-                            .select("id")
-                            .first();
-
         const post = {
             content: req.body.content,
-            image: req.body.image || null,
-            likes: 0
+            image: req.body.image || null
         }
 
         // Add post to db
         const [postId] = await db(table).insert({
-            user_id: userId.id,
+            user_id: req.user.id,
             ...post
         });
 
-        // Return all posts
+        // Return new post
         res.send({
             id: postId,
-            username: username,
+            username: req.username,
             ...post
         });
     } catch (err) {
@@ -133,7 +112,7 @@ router.post("/", validateBody(), async (req, res, next) => {
 });
 
 
-router.put("/:id", validateBody(), async (req, res, next) => {
+router.put("/:id", validateBody(), getUser(), async (req, res, next) => {
     try {
         // Get post before updating
         const originalPost = await db(table).where("id", req.params.id).first();
@@ -148,9 +127,6 @@ router.put("/:id", validateBody(), async (req, res, next) => {
             });
         }
 
-        // Get username from token
-        const username = req.token.username;
-
         // Update post to db
         await db(table).where("id", req.params.id).first().update({
             content: req.body.content,
@@ -161,10 +137,9 @@ router.put("/:id", validateBody(), async (req, res, next) => {
         const post = await db(table)
                             .where("posts.id", req.params.id).first()
                             .join("users", "users.id", "posts.user_id")
-                            .orderBy("posts.likes", "desc")
-                            .select("posts.id", "users.username", "posts.content", "posts.image", "posts.likes");
+                            .select("posts.id", "users.username", "posts.content", "posts.image");
 
-        // Return all posts
+        // Return updated post
         res.send(post);
     } catch (err) {
         next(err);
@@ -177,8 +152,7 @@ router.delete("/:id", async (req, res, next) => {
         const post = await db(table)
                             .where("posts.id", req.params.id).first()
                             .join("users", "users.id", "posts.user_id")
-                            .orderBy("posts.likes", "desc")
-                            .select("posts.id", "users.username", "posts.content", "posts.image", "posts.likes");
+                            .select("posts.id", "users.username", "posts.content", "posts.image");
 
         //  Check if post exists
         if (!post) {
@@ -193,12 +167,39 @@ router.delete("/:id", async (req, res, next) => {
         // Remove post from db
         await db(table).where("id", req.params.id).first().del();
 
-        // Return all posts
+        // Return deleted post
         res.send(post);
     } catch (err) {
         next(err);
     }
 });
+
+
+//------------------------------------------------------------------------------
+// Router middleware
+
+// Get full user-object from database
+function getUser() {
+    return (req, res, next) => {
+        req.username = req.token.username;
+
+        // Get user from database
+        db("users").where("username", req.username).first()
+            .then((user) => {
+                // Add user object to request
+                req.user = user;
+                next();
+            })
+            .catch((error) => {
+                console.log("getUser failed:", error);
+
+                res.status(500).json({
+                    message: "unable to find user data",
+                    success: false,
+                });
+            });
+    }
+}
 
 // Validate required post data
 function validateBody() {
