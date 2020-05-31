@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const {sortBy} = require("lodash");
 const dbhelper = require("../db");
 const db = require("../../database/db-config");
 const table = "posts";
@@ -44,6 +45,9 @@ router.get("/", async (req, res, next) => {
             }
             return item;
         }));
+
+        // Sort posts by likes (desc order; top-bottom)
+        posts = sortBy(posts, [(o) => o.likes]).reverse();
 
         // Return all posts
         res.send(posts);
