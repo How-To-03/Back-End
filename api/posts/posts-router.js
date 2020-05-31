@@ -17,7 +17,6 @@ router.get("/", async (req, res, next) => {
         // Get all posts from db
         let posts = await db(table)
                             .join("users", "users.id", "posts.user_id")
-                            .orderBy("posts.likes", "desc")
                             .select("posts.id", "users.username", "posts.content", "posts.image");
 
         // Get users likes
