@@ -2,41 +2,18 @@ const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {sortBy} = require("lodash");
-const dbhelper = require("../db");
+const dbmodel = require("../db");
 const db = require("../../database/db-config");
 const table = "posts";
 
 router.get("/", getUser(), async (req, res, next) => {
     try {
         // Get all posts from db
-        let posts = await db(table)
-                            .join("users", "users.id", "posts.user_id")
-                            .select("posts.id", "users.username", "posts.content", "posts.image");
-
-        // Get users likes
-        // (very hacky but works for now; should really be one sql search)
-        const usersLikes = await db("post_likes")
-                                .join("users", "users.id", "post_likes.user_id")
-                                .where("users.id", req.user.id)
-                                .select("post_likes.post_id as id");
+        let posts = await dbmodel.getAllPosts();
 
         // Determine if current user has liked each post
         posts = await Promise.all(posts.map(async (item, array) => {
-
-            // Fetch all post likes
-            let postLikes = await db("post_likes")
-                                    .where("post_id", item.id)
-                                    .count({ total: 'post_id' })
-                                    .first();
-            item.likes = postLikes["total"];
-
-            if (usersLikes.some(likes => likes.id === item.id)) {
-                item.hasLiked = true;
-            }
-            else {
-                item.hasLiked = false;
-            }
-            return item;
+            return dbmodel.determinePostLikes(req.user.id, item);
         }));
 
         // Sort posts by likes (desc order; top-bottom)
@@ -55,11 +32,7 @@ router.get("/:id/like", getUser(), async (req, res, next) => {
         let postLikeState;
 
         // Get users likes
-        // (very hacky but works for now; should really be one sql search)
-        const usersLikes = await db("post_likes")
-                                .join("users", "users.id", "post_likes.user_id")
-                                .where("users.id", req.user.id)
-                                .select("post_likes.post_id as id");
+        const usersLikes = await dbmodel.getUsersLikes(req.user.id);
 
         // Determine if current user has liked each post
         if (usersLikes.some(likes => likes.id == req.params.id)) {
@@ -115,10 +88,10 @@ router.post("/", validateBody(), getUser(), async (req, res, next) => {
 router.put("/:id", validateBody(), getUser(), async (req, res, next) => {
     try {
         // Get post before updating
-        const originalPost = await db(table).where("id", req.params.id).first();
+        const postOriginal = await dbmodel.getPost(req.params.id);
 
         //  Check if post exists
-        if (!originalPost) {
+        if (!postOriginal) {
             // Post does not exist
             res.status(400).json({
                 message: "requested post does not exist /posts/:id",
@@ -130,17 +103,14 @@ router.put("/:id", validateBody(), getUser(), async (req, res, next) => {
         // Update post to db
         await db(table).where("id", req.params.id).first().update({
             content: req.body.content,
-            image: req.body.image || originalPost.image,
+            image: req.body.image || postOriginal.image,
         });
 
         // Get full post from db
-        const post = await db(table)
-                            .where("posts.id", req.params.id).first()
-                            .join("users", "users.id", "posts.user_id")
-                            .select("posts.id", "users.username", "posts.content", "posts.image");
+        const postUpdated = await dbmodel.getPost(req.params.id);
 
         // Return updated post
-        res.send(post);
+        res.send(postUpdated);
     } catch (err) {
         next(err);
     }
@@ -149,10 +119,7 @@ router.put("/:id", validateBody(), getUser(), async (req, res, next) => {
 router.delete("/:id", async (req, res, next) => {
     try {
         // Get post before deleting
-        const post = await db(table)
-                            .where("posts.id", req.params.id).first()
-                            .join("users", "users.id", "posts.user_id")
-                            .select("posts.id", "users.username", "posts.content", "posts.image");
+        const post = await dbmodel.getPost(req.params.id);
 
         //  Check if post exists
         if (!post) {
